@@ -13,37 +13,43 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
   :root{
-    --gruen:#1f7a4d; --gruen-dunkel:#155c39; --gelb:#ffd23f;
+    --gruen:#1f7a4d; --gruen-hell:#e3f2e9; --gelb:#ffd23f;
     --bg:#f3f5f2; --karte:#ffffff; --text:#1b231e; --leise:#6b776f; --linie:#e2e7e3; --rot:#c0392b;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#111613; --karte:#1b221e; --text:#e9efe9; --leise:#93a097; --linie:#2a332d; }
+    :root{ --bg:#111613; --karte:#1b221e; --text:#e9efe9; --leise:#93a097; --linie:#2a332d; --gruen-hell:#1f3a2b; }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;background:var(--bg);color:var(--text);
     font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   header{position:sticky;top:0;z-index:5;background:var(--gruen);color:#fff;
-    padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-  .kopf{display:flex;align-items:center;gap:10px;max-width:640px;margin:0 auto}
-  .kopf h1{font-size:22px;margin:0;flex:1;letter-spacing:.2px}
-  .status{font-size:13px;display:flex;align-items:center;gap:6px;opacity:.95;cursor:pointer}
+    padding:calc(env(safe-area-inset-top) + 12px) 16px 0;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  .breite{max-width:640px;margin:0 auto}
+  .kopf{display:flex;align-items:center;gap:10px}
+  .kopf h1{font-size:22px;margin:0;flex:1}
+  .status{font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer}
   .punkt{width:10px;height:10px;border-radius:50%;background:#bbb}
   .online .punkt{background:#6dff9e;box-shadow:0 0 6px #6dff9e}
   .offline .punkt{background:#ff8a7a}
-  form.neu{display:flex;gap:8px;max-width:640px;margin:12px auto 0}
+  form.neu{display:flex;gap:8px;margin-top:12px}
   form.neu input{flex:1;min-width:0;font-size:18px;padding:13px 14px;border:0;border-radius:12px;
     background:#fff;color:#1b231e;outline:none}
   form.neu button{font-size:26px;width:54px;border:0;border-radius:12px;background:var(--gelb);
     color:#1b231e;font-weight:700;cursor:pointer}
-  main{max-width:640px;margin:0 auto;padding:12px 12px calc(env(safe-area-inset-bottom) + 40px)}
+  nav{display:flex;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav button{flex:1;min-width:0;white-space:nowrap;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;
+    font-size:12.5px;padding:6px 2px 8px;border-bottom:3px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+  nav button i{font-style:normal;font-size:21px;line-height:1}
+  nav button.aktiv{color:#fff;font-weight:600;border-bottom-color:var(--gelb)}
+  main{padding:12px 12px calc(env(safe-area-inset-bottom) + 40px)}
   .abschnitt{margin:18px 4px 8px;font-size:14px;font-weight:600;color:var(--leise);
     text-transform:uppercase;letter-spacing:.6px;display:flex;justify-content:space-between;align-items:center}
   .abschnitt button{font:inherit;font-size:13px;text-transform:none;letter-spacing:0;border:1px solid var(--linie);
     background:var(--karte);color:var(--rot);border-radius:20px;padding:5px 12px;cursor:pointer}
   ul{list-style:none;margin:0;padding:0}
   li{display:flex;align-items:center;gap:12px;background:var(--karte);border:1px solid var(--linie);
-    border-radius:14px;padding:12px 10px 12px 14px;margin-bottom:8px;user-select:none;cursor:pointer;
-    transition:background .3s}
+    border-radius:14px;padding:11px 8px 11px 14px;margin-bottom:8px;user-select:none;cursor:pointer}
   li .haken{flex:none;width:28px;height:28px;border-radius:50%;border:2.5px solid var(--gruen);
     display:grid;place-items:center;color:#fff;font-size:17px}
   li .inhalt{flex:1;min-width:0}
@@ -60,6 +66,17 @@
   @keyframes blink{50%{background:rgba(255,210,63,.35)}}
   .leer{text-align:center;color:var(--leise);padding:40px 10px}
   .leer b{display:block;font-size:40px;margin-bottom:6px}
+  /* Katalog */
+  details.kat{background:var(--karte);border:1px solid var(--linie);border-radius:14px;margin-bottom:8px;overflow:hidden}
+  details.kat summary{list-style:none;padding:14px;font-size:17px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between}
+  details.kat summary::-webkit-details-marker{display:none}
+  details.kat summary .zahl{font-weight:400;color:var(--leise);font-size:14px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 12px 14px}
+  .chip{border:1.5px solid var(--linie);background:var(--bg);color:var(--text);border-radius:22px;
+    padding:8px 13px;font:inherit;font-size:15px;cursor:pointer}
+  .chip.drauf{background:var(--gruen);border-color:var(--gruen);color:#fff}
+  .chip.drauf::before{content:"✓ "}
+  .hinweis{font-size:13.5px;color:var(--leise);margin:4px 4px 12px}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);
     background:#222;color:#fff;padding:12px 16px;border-radius:12px;display:flex;gap:16px;align-items:center;
     box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:15px;z-index:20;max-width:calc(100% - 24px)}
@@ -78,28 +95,41 @@
 </head>
 <body>
 <header>
-  <div class="kopf">
-    <h1>🛒 Einkaufsliste</h1>
-    <div id="status" class="status" title="Verbindung">
-      <span class="punkt"></span><span id="statusText">verbinde…</span>
+  <div class="breite">
+    <div class="kopf">
+      <h1>🛒 Einkaufsliste</h1>
+      <div id="status" class="status" title="Name ändern">
+        <span class="punkt"></span><span id="statusText">verbinde…</span>
+      </div>
     </div>
+    <form class="neu" id="formNeu" autocomplete="off">
+      <input id="eingabe" list="vorschlaege" placeholder="Was brauchen wir?" enterkeyhint="done" aria-label="Neuer Artikel">
+      <datalist id="vorschlaege"></datalist>
+      <button type="submit" aria-label="Hinzufügen">+</button>
+    </form>
+    <nav id="tabs">
+      <button data-tab="liste" class="aktiv"><i>🛒</i><span>Liste <span id="tabZahl"></span></span></button>
+      <button data-tab="lm"><i>🥕</i><span>Lebensmittel</span></button>
+      <button data-tab="hh"><i>🧴</i><span>Haushalt</span></button>
+      <button data-tab="kl"><i>👕</i><span>Kleidung</span></button>
+    </nav>
   </div>
-  <form class="neu" id="formNeu" autocomplete="off">
-    <input id="eingabe" list="vorschlaege" placeholder="Was brauchen wir? z. B. 2 l Milch" enterkeyhint="done" aria-label="Neuer Artikel">
-    <datalist id="vorschlaege"></datalist>
-    <button type="submit" aria-label="Hinzufügen">+</button>
-  </form>
 </header>
 
-<main>
-  <div id="leer" class="leer" hidden><b>✨</b>Die Liste ist leer.<br>Oben eintippen und mit + speichern.</div>
-  <div class="abschnitt" id="kopfOffen" hidden><span>Noch besorgen (<span id="anzOffen">0</span>)</span></div>
-  <ul id="listeOffen"></ul>
-  <div class="abschnitt" id="kopfErledigt" hidden>
-    <span>Im Wagen (<span id="anzErledigt">0</span>)</span>
-    <button id="btnAufraeumen" type="button">Erledigte entfernen</button>
-  </div>
-  <ul id="listeErledigt"></ul>
+<main class="breite">
+  <section id="ansichtListe">
+    <div id="leer" class="leer" hidden><b>✨</b>Die Liste ist leer.<br>Oben eintippen oder in den Katalogen antippen.</div>
+    <div id="offenBereich"></div>
+    <div class="abschnitt" id="kopfErledigt" hidden>
+      <span>Im Wagen (<span id="anzErledigt">0</span>)</span>
+      <button id="btnAufraeumen" type="button">Erledigte entfernen</button>
+    </div>
+    <ul id="listeErledigt"></ul>
+  </section>
+  <section id="ansichtKatalog" hidden>
+    <p class="hinweis">Antippen setzt den Artikel auf die Liste – nochmal antippen nimmt ihn wieder runter.</p>
+    <div id="katalog"></div>
+  </section>
 </main>
 
 <div id="toast" class="toast" hidden><span id="toastText"></span><button id="toastAktion" type="button">Rückgängig</button></div>
@@ -113,196 +143,227 @@
   </div>
 </div>
 
-<div id="fensterSetup" class="fenster" hidden>
-  <div>
-    <h2>Noch nicht verbunden</h2>
-    <p id="setupText">In <code>firebase-config.js</code> fehlt noch der <code>apiKey</code> aus der Firebase-Konsole.</p>
-  </div>
+<div id="fensterFehler" class="fenster" hidden>
+  <div><h2>Keine Verbindung</h2><p id="fehlerText"></p></div>
 </div>
 
 <script src="firebase-config.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, push, set, update, remove, onValue, serverTimestamp }
+import { getDatabase, ref, set, update, remove, onValue, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+// Datenformat (kompatibel zur bisherigen Einkaufsliste):
+//   /liste/<id> = { id, name, erledigt, typ: "lm"|"hh"|"kl", von?, ts?, erledigtVon?, erledigtTs? }
+//   /lmData, /hhData, /klData = { "<Kategorie>": ["Artikel", ...] }  (Kataloge, nur lesend)
+const TYPEN = { lm:{titel:"Lebensmittel", pfad:"lmData"}, hh:{titel:"Haushalt", pfad:"hhData"}, kl:{titel:"Kleidung", pfad:"klData"} };
 const $ = id => document.getElementById(id);
-const LISTE = "liste"; // Datenbank-Pfad: /liste/artikel und /liste/verlauf
-const cfg = window.FIREBASE_CONFIG || {};
 
 // ---------- Name ----------
 let meinName = "";
 try { meinName = localStorage.getItem("einkauf_name") || ""; } catch(e){}
 function nameAbfragen(){
-  $("fensterName").hidden = false;
-  $("nameEingabe").value = meinName;
+  $("fensterName").hidden = false; $("nameEingabe").value = meinName;
   setTimeout(()=> $("nameEingabe").focus(), 50);
 }
 $("nameSpeichern").onclick = () => {
-  const n = $("nameEingabe").value.trim();
-  if(!n) return;
-  meinName = n;
-  try { localStorage.setItem("einkauf_name", n); } catch(e){}
-  $("fensterName").hidden = true;
+  const n = $("nameEingabe").value.trim(); if(!n) return;
+  meinName = n; try { localStorage.setItem("einkauf_name", n); } catch(e){}
+  $("fensterName").hidden = true; zeichnen();
 };
 $("nameEingabe").addEventListener("keydown", e => { if(e.key==="Enter") $("nameSpeichern").click(); });
+$("status").onclick = nameAbfragen;
 if(!meinName) nameAbfragen();
 
-// ---------- Setup prüfen ----------
-if(!cfg.apiKey || cfg.apiKey.startsWith("HIER_")){
-  $("fensterSetup").hidden = false;
-  throw new Error("Firebase-Konfiguration fehlt");
-}
+function fehler(html){ $("fehlerText").innerHTML = html; $("fensterFehler").hidden = false; }
 
 // ---------- Firebase ----------
-const app = initializeApp(cfg);
+const app = initializeApp(window.FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db = getDatabase(app);
-const artikelRef = ref(db, `${LISTE}/artikel`);
-const verlaufRef = ref(db, `${LISTE}/verlauf`);
 
-// Status-Anzeige
-function setStatus(online){
-  $("status").className = "status " + (online ? "online" : "offline");
-  $("statusText").textContent = online ? "live" : "offline";
-}
-$("status").onclick = nameAbfragen;
+let artikel = {};                 // id -> Eintrag
+let kataloge = { lm:{}, hh:{}, kl:{} };
+let ersterLauf = true, bekannteIds = new Set(), frischeIds = new Set();
+let aktiverTab = "liste";
 
-onAuthStateChanged(auth, user => {
-  if(user){ starten(); }
-});
-signInAnonymously(auth).catch(err => {
-  $("setupText").innerHTML = "Anmeldung bei Firebase fehlgeschlagen: <code>" + (err.code||err.message) +
-    "</code><br><br>In der Firebase-Konsole unter <b>Authentication → Sign-in method</b> den Anbieter <b>Anonym</b> aktivieren.";
-  $("fensterSetup").hidden = false;
-});
+onAuthStateChanged(auth, user => { if(user) starten(); });
+signInAnonymously(auth).catch(err => fehler("Anmeldung fehlgeschlagen: <code>" + esc(err.code||err.message) + "</code>"));
 
 let gestartet = false;
-let ersterLauf = true;
-let bekannteIds = new Set();
-let frischeIds = new Set();
-let artikel = {};
-
 function starten(){
   if(gestartet) return; gestartet = true;
-  onValue(ref(db, ".info/connected"), s => setStatus(s.val() === true));
-
-  onValue(artikelRef, snap => {
-    artikel = snap.val() || {};
-    // Neue Einträge vom Partner hervorheben (nicht beim ersten Laden)
+  onValue(ref(db, ".info/connected"), s => {
+    const on = s.val() === true;
+    $("status").className = "status " + (on ? "online" : "offline");
+    $("statusText").textContent = on ? "live" : "offline";
+  });
+  onValue(ref(db, "liste"), snap => {
+    const roh = snap.val() || {};
+    artikel = {};
+    for(const [id,a] of Object.entries(roh)) if(a && typeof a === "object" && a.name) artikel[id] = a;
     const ids = Object.keys(artikel);
     if(!ersterLauf){
-      let neuVonAnderen = false;
-      for(const id of ids){
-        if(!bekannteIds.has(id) && artikel[id].von !== meinName){
-          frischeIds.add(id); neuVonAnderen = true;
-          setTimeout(()=>{ frischeIds.delete(id); zeichnen(); }, 5*60*1000);
-        }
+      let neu = false;
+      for(const id of ids) if(!bekannteIds.has(id) && artikel[id].von !== meinName){
+        frischeIds.add(id); neu = true;
+        setTimeout(()=>{ frischeIds.delete(id); zeichnen(); }, 5*60*1000);
       }
-      if(neuVonAnderen && navigator.vibrate) navigator.vibrate([120,80,120]);
+      if(neu && navigator.vibrate) navigator.vibrate([120,80,120]);
     }
-    bekannteIds = new Set(ids);
-    ersterLauf = false;
+    bekannteIds = new Set(ids); ersterLauf = false;
     zeichnen();
-  }, err => {
-    $("setupText").innerHTML = "Kein Zugriff auf die Datenbank: <code>" + (err.code||err.message) + "</code>";
-    $("fensterSetup").hidden = false;
-  });
-
-  onValue(verlaufRef, snap => {
-    const v = snap.val() || {};
-    const namen = Object.values(v).sort((a,b)=>(b.anzahl||0)-(a.anzahl||0)).slice(0,200);
-    $("vorschlaege").innerHTML = namen.map(x => `<option value="${esc(x.name)}">`).join("");
-  });
+  }, err => fehler("Kein Zugriff auf die Liste: <code>" + esc(err.code||err.message) + "</code>"));
+  for(const [typ, t] of Object.entries(TYPEN)){
+    onValue(ref(db, t.pfad), snap => {
+      kataloge[typ] = snap.val() || {};
+      vorschlaegeAufbauen(); zeichnen();
+    });
+  }
 }
 
-// ---------- Darstellung ----------
+// ---------- Hilfen ----------
 function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+const norm = s => String(s).trim().toLowerCase();
+function neueId(){ return "id_" + Date.now() + "_" + Math.random().toString(36).slice(2,6); }
 function zeit(ts){
   if(!ts) return "";
   const d = new Date(ts), jetzt = new Date();
   const hm = d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
   if(d.toDateString() === jetzt.toDateString()) return "heute " + hm;
-  const gestern = new Date(jetzt); gestern.setDate(jetzt.getDate()-1);
-  if(d.toDateString() === gestern.toDateString()) return "gestern " + hm;
+  const g = new Date(jetzt); g.setDate(jetzt.getDate()-1);
+  if(d.toDateString() === g.toDateString()) return "gestern " + hm;
   return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"}) + " " + hm;
 }
-
-function zeichnen(){
-  const alle = Object.entries(artikel).map(([id,a]) => ({id, ...a}));
-  const offen = alle.filter(a => !a.erledigt).sort((a,b)=>(b.ts||0)-(a.ts||0));
-  const erledigt = alle.filter(a => a.erledigt).sort((a,b)=>(b.erledigtTs||0)-(a.erledigtTs||0));
-
-  $("listeOffen").innerHTML = offen.map(zeile).join("");
-  $("listeErledigt").innerHTML = erledigt.map(zeile).join("");
-  $("anzOffen").textContent = offen.length;
-  $("anzErledigt").textContent = erledigt.length;
-  $("kopfOffen").hidden = offen.length === 0;
-  $("kopfErledigt").hidden = erledigt.length === 0;
-  $("leer").hidden = alle.length !== 0;
-  document.title = offen.length ? `(${offen.length}) Einkaufsliste` : "Einkaufsliste";
+function katalogArtikel(typ){
+  const out = [];
+  for(const [kat, liste] of Object.entries(kataloge[typ] || {}))
+    for(const n of Object.values(liste || {})) if(typeof n === "string") out.push({kat, name:n});
+  return out;
 }
-
-function zeile(a){
-  const frisch = frischeIds.has(a.id) && !a.erledigt;
-  let info = a.von ? `${esc(a.von)} · ${zeit(a.ts)}` : zeit(a.ts);
-  if(a.erledigt && a.erledigtVon) info = `✓ ${esc(a.erledigtVon)} · ${zeit(a.erledigtTs)}`;
-  return `<li data-id="${a.id}" class="${a.erledigt?"erledigt":""} ${frisch?"frisch":""}">
-    <span class="haken">${a.erledigt?"✓":""}</span>
-    <div class="inhalt">
-      <div class="name">${esc(a.name)}${frisch?'<span class="neu-marke">NEU</span>':""}</div>
-      <div class="info">${info}</div>
-    </div>
-    <button class="loeschen" data-loeschen="${a.id}" aria-label="Löschen">✕</button>
-  </li>`;
+function typRaten(name){
+  for(const typ of Object.keys(TYPEN))
+    if(katalogArtikel(typ).some(a => norm(a.name) === norm(name))) return typ;
+  return "lm";
+}
+function offenerEintrag(name){
+  return Object.entries(artikel).find(([,a]) => !a.erledigt && norm(a.name) === norm(name));
+}
+function vorschlaegeAufbauen(){
+  const namen = new Set();
+  for(const typ of Object.keys(TYPEN)) for(const a of katalogArtikel(typ)) namen.add(a.name);
+  $("vorschlaege").innerHTML = [...namen].sort((a,b)=>a.localeCompare(b,"de")).map(n => `<option value="${esc(n)}">`).join("");
 }
 
 // ---------- Aktionen ----------
-$("formNeu").addEventListener("submit", e => {
-  e.preventDefault();
-  const name = $("eingabe").value.trim();
-  if(!name) return;
-  // Doppelte offene Einträge vermeiden
-  const doppelt = Object.values(artikel).some(a => !a.erledigt && a.name.toLowerCase() === name.toLowerCase());
-  if(doppelt){ zeigeToast(`„${name}“ steht schon drauf`); $("eingabe").value=""; return; }
-  push(artikelRef, { name, von: meinName || "", ts: serverTimestamp(), erledigt: false });
-  // Verlauf für Vorschläge
-  const key = name.toLowerCase().replace(/[.#$\[\]\/]/g,"_").slice(0,80);
-  const vRef = ref(db, `${LISTE}/verlauf/${key}`);
-  onValue(vRef, s => { set(vRef, { name, anzahl: ((s.val()||{}).anzahl||0)+1 }); }, { onlyOnce:true });
-  $("eingabe").value = "";
-  $("eingabe").focus();
-});
-
-function klick(e){
-  const del = e.target.closest("[data-loeschen]");
-  if(del){
-    const id = del.dataset.loeschen, alt = artikel[id];
-    remove(ref(db, `${LISTE}/artikel/${id}`));
-    zeigeToast(`„${alt.name}“ gelöscht`, () => set(ref(db, `${LISTE}/artikel/${id}`), alt));
-    return;
-  }
-  const li = e.target.closest("li[data-id]");
-  if(!li) return;
-  const id = li.dataset.id, a = artikel[id];
-  const jetztErledigt = !a.erledigt;
-  update(ref(db, `${LISTE}/artikel/${id}`), jetztErledigt
+function hinzufuegen(name, typ){
+  name = name.trim(); if(!name) return;
+  if(offenerEintrag(name)){ zeigeToast(`„${name}“ steht schon drauf`); return; }
+  const id = neueId();
+  set(ref(db, `liste/${id}`), { id, name, erledigt:false, typ: typ || typRaten(name), von: meinName||"", ts: serverTimestamp() });
+}
+function loeschen(id){
+  const alt = artikel[id]; if(!alt) return;
+  remove(ref(db, `liste/${id}`));
+  zeigeToast(`„${alt.name}“ entfernt`, () => set(ref(db, `liste/${id}`), alt));
+}
+function umschalten(id){
+  const a = artikel[id]; if(!a) return;
+  update(ref(db, `liste/${id}`), !a.erledigt
     ? { erledigt:true, erledigtVon: meinName||"", erledigtTs: serverTimestamp() }
     : { erledigt:false, erledigtVon:null, erledigtTs:null });
   if(navigator.vibrate) navigator.vibrate(15);
 }
-$("listeOffen").addEventListener("click", klick);
-$("listeErledigt").addEventListener("click", klick);
+
+$("formNeu").addEventListener("submit", e => {
+  e.preventDefault();
+  hinzufuegen($("eingabe").value, aktiverTab === "liste" ? null : aktiverTab);
+  $("eingabe").value = ""; $("eingabe").focus();
+});
+
+function listenKlick(e){
+  const del = e.target.closest("[data-loeschen]");
+  if(del){ loeschen(del.dataset.loeschen); return; }
+  const li = e.target.closest("li[data-id]");
+  if(li) umschalten(li.dataset.id);
+}
+$("offenBereich").addEventListener("click", listenKlick);
+$("listeErledigt").addEventListener("click", listenKlick);
+
+$("katalog").addEventListener("click", e => {
+  const chip = e.target.closest(".chip"); if(!chip) return;
+  const name = chip.dataset.name;
+  const vorhanden = offenerEintrag(name);
+  if(vorhanden) loeschen(vorhanden[0]); else hinzufuegen(name, aktiverTab);
+});
 
 $("btnAufraeumen").onclick = () => {
   const weg = Object.entries(artikel).filter(([,a]) => a.erledigt);
   if(!weg.length) return;
-  const upd = {}; const sicherung = {};
+  const upd = {}, sicherung = {};
   for(const [id,a] of weg){ upd[id] = null; sicherung[id] = a; }
-  update(artikelRef, upd);
-  zeigeToast(`${weg.length} erledigte entfernt`, () => update(artikelRef, sicherung));
+  update(ref(db, "liste"), upd);
+  zeigeToast(`${weg.length} erledigte entfernt`, () => update(ref(db, "liste"), sicherung));
 };
+
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]"); if(!b) return;
+  aktiverTab = b.dataset.tab;
+  for(const x of $("tabs").children) x.classList.toggle("aktiv", x === b);
+  $("eingabe").placeholder = aktiverTab === "liste" ? "Was brauchen wir?" : `${TYPEN[aktiverTab].titel}: eigener Artikel…`;
+  zeichnen(); window.scrollTo(0,0);
+});
+
+// ---------- Darstellung ----------
+function zeile(id, a){
+  const frisch = frischeIds.has(id) && !a.erledigt;
+  let info = a.von ? `${esc(a.von)} · ${zeit(a.ts)}` : "";
+  if(a.erledigt && a.erledigtVon) info = `✓ ${esc(a.erledigtVon)} · ${zeit(a.erledigtTs)}`;
+  return `<li data-id="${esc(id)}" class="${a.erledigt?"erledigt":""} ${frisch?"frisch":""}">
+    <span class="haken">${a.erledigt?"✓":""}</span>
+    <div class="inhalt"><div class="name">${esc(a.name)}${frisch?'<span class="neu-marke">NEU</span>':""}</div>
+    ${info?`<div class="info">${info}</div>`:""}</div>
+    <button class="loeschen" data-loeschen="${esc(id)}" aria-label="Löschen">✕</button></li>`;
+}
+
+function zeichnen(){
+  const alle = Object.entries(artikel);
+  const offen = alle.filter(([,a]) => !a.erledigt).sort((x,y)=>(y[1].ts||0)-(x[1].ts||0));
+  const erledigt = alle.filter(([,a]) => a.erledigt).sort((x,y)=>(y[1].erledigtTs||0)-(x[1].erledigtTs||0));
+  $("tabZahl").textContent = offen.length ? `(${offen.length})` : "";
+  document.title = offen.length ? `(${offen.length}) Einkaufsliste` : "Einkaufsliste";
+
+  $("ansichtListe").hidden = aktiverTab !== "liste";
+  $("ansichtKatalog").hidden = aktiverTab === "liste";
+
+  if(aktiverTab === "liste"){
+    // Offene Artikel nach Bereich gruppiert
+    let html = "";
+    for(const typ of Object.keys(TYPEN)){
+      const gruppe = offen.filter(([,a]) => (TYPEN[a.typ] ? a.typ : "lm") === typ);
+      if(!gruppe.length) continue;
+      html += `<div class="abschnitt"><span>${TYPEN[typ].titel} (${gruppe.length})</span></div><ul>${gruppe.map(([id,a])=>zeile(id,a)).join("")}</ul>`;
+    }
+    $("offenBereich").innerHTML = html;
+    $("listeErledigt").innerHTML = erledigt.map(([id,a])=>zeile(id,a)).join("");
+    $("anzErledigt").textContent = erledigt.length;
+    $("kopfErledigt").hidden = erledigt.length === 0;
+    $("leer").hidden = alle.length !== 0;
+  } else {
+    const offeneNamen = new Set(offen.map(([,a]) => norm(a.name)));
+    const offenGeklappt = new Set([...document.querySelectorAll("details.kat[open]")].map(d => d.dataset.kat));
+    const kats = Object.entries(kataloge[aktiverTab] || {});
+    $("katalog").innerHTML = kats.length ? kats.map(([kat, liste]) => {
+      const namen = Object.values(liste || {}).filter(n => typeof n === "string");
+      const drauf = namen.filter(n => offeneNamen.has(norm(n))).length;
+      return `<details class="kat" data-kat="${esc(kat)}" ${offenGeklappt.has(kat)?"open":""}>
+        <summary><span>${esc(kat)}</span><span class="zahl">${drauf?`✓ ${drauf} · `:""}${namen.length}</span></summary>
+        <div class="chips">${namen.map(n => `<button class="chip ${offeneNamen.has(norm(n))?"drauf":""}" data-name="${esc(n)}">${esc(n)}</button>`).join("")}</div>
+      </details>`;
+    }).join("") : `<div class="leer">Katalog wird geladen…</div>`;
+  }
+}
 
 // ---------- Toast ----------
 let toastTimer;
@@ -315,10 +376,7 @@ function zeigeToast(text, rueckgaengig){
   toastTimer = setTimeout(()=> $("toast").hidden = true, 5000);
 }
 
-// ---------- Offline-Fähigkeit / Installation ----------
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js").catch(()=>{});
-}
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>

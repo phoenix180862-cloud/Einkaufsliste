@@ -1,26 +1,24 @@
 # 🛒 Einkaufsliste
 
 Gemeinsame Einkaufsliste für zwei (oder mehr) Handys – **Echtzeit-Abgleich** über Firebase.
-Trägt einer etwas ein, erscheint es beim anderen sofort (mit gelber „NEU“-Markierung und kurzem Vibrieren),
-auch wenn der andere gerade schon im Laden steht.
+Trägt einer etwas ein, erscheint es beim anderen sofort (gelbe „NEU“-Markierung, kurzes Vibrieren) –
+auch wenn der andere schon im Laden steht.
 
 ## Funktionen
-- Artikel eintippen → **+** (Vorschläge aus früheren Einkäufen)
-- Antippen = abhaken („Im Wagen“), nochmal antippen = zurück
-- ✕ = löschen (mit „Rückgängig“)
+- **Liste:** alles, was noch fehlt, gruppiert nach Lebensmittel / Haushalt / Kleidung
+- **Kataloge** (Lebensmittel, Haushalt, Kleidung): Artikel nach Kategorien – antippen = auf die Liste, nochmal = runter
+- Freitext oben eintippen → **+** (mit Vorschlägen aus den Katalogen)
+- In der Liste antippen = abhaken („Im Wagen“), ✕ = löschen (mit „Rückgängig“)
 - „Erledigte entfernen“ räumt nach dem Einkauf auf
-- Anzeige, wer was wann eingetragen/abgehakt hat
-- Grüner Punkt „live“ = verbunden; „offline“ = Änderungen werden nachgereicht
-- Als App installierbar (Startbildschirm), Hell/Dunkel automatisch
+- Wer hat was wann eingetragen/abgehakt; grüner Punkt „live“ = verbunden
+- Als App installierbar, Hell/Dunkel automatisch
 
 ## Auf dem Handy installieren
-- **Android (Chrome):** Seite öffnen → Menü ⋮ → „Zum Startbildschirm hinzufügen“ / „App installieren“
+- **Android (Chrome):** Seite öffnen → Menü ⋮ → „App installieren“ / „Zum Startbildschirm hinzufügen“
 - **iPhone (Safari):** Seite öffnen → Teilen-Symbol → „Zum Home-Bildschirm“
 
-## Einrichtung (einmalig)
-1. In `firebase-config.js` den `apiKey` (und `appId`, `messagingSenderId`) eintragen –
-   Firebase-Konsole → Projekt **einkaufsliste-98199** → Projekteinstellungen → Meine Apps → Web-App → Konfiguration.
-2. Firebase-Konsole → **Authentication → Sign-in method → Anonym** aktivieren.
-3. Firebase-Konsole → **Realtime Database → Regeln** → Inhalt von `database.rules.json` einfügen → Veröffentlichen.
-
-Die Daten liegen in der Realtime Database unter `/liste/artikel` (Einträge) und `/liste/verlauf` (Vorschläge).
+## Technik
+- Firebase-Projekt `einkaufsliste-98199`, Realtime Database (europe-west1), anonyme Anmeldung
+- Daten: `/liste/<id>` = `{ id, name, erledigt, typ }` (+ `von`, `ts`, `erledigtVon`, `erledigtTs`) – kompatibel zur bisherigen Liste
+- Kataloge (nur lesend): `/lmData`, `/hhData`, `/klData` = `{ Kategorie: [Artikel, …] }`
+- **Achtung:** Dieselbe Datenbank nutzt auch die TW Baustellen-App – Sicherheitsregeln nur mit Blick auf beide Apps ändern.
