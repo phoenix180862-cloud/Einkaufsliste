@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Einkaufsliste</title>
+<meta name="theme-color" content="#1f7a4d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Einkauf">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root{
+    --gruen:#1f7a4d; --gruen-dunkel:#155c39; --gelb:#ffd23f;
+    --bg:#f3f5f2; --karte:#ffffff; --text:#1b231e; --leise:#6b776f; --linie:#e2e7e3; --rot:#c0392b;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#111613; --karte:#1b221e; --text:#e9efe9; --leise:#93a097; --linie:#2a332d; }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{position:sticky;top:0;z-index:5;background:var(--gruen);color:#fff;
+    padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  .kopf{display:flex;align-items:center;gap:10px;max-width:640px;margin:0 auto}
+  .kopf h1{font-size:22px;margin:0;flex:1;letter-spacing:.2px}
+  .status{font-size:13px;display:flex;align-items:center;gap:6px;opacity:.95;cursor:pointer}
+  .punkt{width:10px;height:10px;border-radius:50%;background:#bbb}
+  .online .punkt{background:#6dff9e;box-shadow:0 0 6px #6dff9e}
+  .offline .punkt{background:#ff8a7a}
+  form.neu{display:flex;gap:8px;max-width:640px;margin:12px auto 0}
+  form.neu input{flex:1;min-width:0;font-size:18px;padding:13px 14px;border:0;border-radius:12px;
+    background:#fff;color:#1b231e;outline:none}
+  form.neu button{font-size:26px;width:54px;border:0;border-radius:12px;background:var(--gelb);
+    color:#1b231e;font-weight:700;cursor:pointer}
+  main{max-width:640px;margin:0 auto;padding:12px 12px calc(env(safe-area-inset-bottom) + 40px)}
+  .abschnitt{margin:18px 4px 8px;font-size:14px;font-weight:600;color:var(--leise);
+    text-transform:uppercase;letter-spacing:.6px;display:flex;justify-content:space-between;align-items:center}
+  .abschnitt button{font:inherit;font-size:13px;text-transform:none;letter-spacing:0;border:1px solid var(--linie);
+    background:var(--karte);color:var(--rot);border-radius:20px;padding:5px 12px;cursor:pointer}
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;align-items:center;gap:12px;background:var(--karte);border:1px solid var(--linie);
+    border-radius:14px;padding:12px 10px 12px 14px;margin-bottom:8px;user-select:none;cursor:pointer;
+    transition:background .3s}
+  li .haken{flex:none;width:28px;height:28px;border-radius:50%;border:2.5px solid var(--gruen);
+    display:grid;place-items:center;color:#fff;font-size:17px}
+  li .inhalt{flex:1;min-width:0}
+  li .name{font-size:18px;word-wrap:break-word}
+  li .info{font-size:12.5px;color:var(--leise);margin-top:2px}
+  li .loeschen{flex:none;border:0;background:none;color:var(--leise);font-size:22px;width:40px;height:40px;
+    border-radius:50%;cursor:pointer}
+  li.erledigt{opacity:.55}
+  li.erledigt .haken{background:var(--gruen)}
+  li.erledigt .name{text-decoration:line-through}
+  li.frisch{animation:blink 1.4s ease 3;border-color:var(--gelb)}
+  .neu-marke{display:inline-block;background:var(--gelb);color:#1b231e;font-size:11px;font-weight:700;
+    padding:1px 7px;border-radius:10px;margin-left:6px;vertical-align:2px}
+  @keyframes blink{50%{background:rgba(255,210,63,.35)}}
+  .leer{text-align:center;color:var(--leise);padding:40px 10px}
+  .leer b{display:block;font-size:40px;margin-bottom:6px}
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);
+    background:#222;color:#fff;padding:12px 16px;border-radius:12px;display:flex;gap:16px;align-items:center;
+    box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:15px;z-index:20;max-width:calc(100% - 24px)}
+  .toast button{border:0;background:none;color:var(--gelb);font:inherit;font-weight:700;cursor:pointer}
+  .fenster{position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;z-index:30;padding:16px}
+  .fenster>div{background:var(--karte);color:var(--text);border-radius:18px;padding:22px;width:100%;max-width:400px}
+  .fenster h2{margin:0 0 8px;font-size:20px}
+  .fenster p{margin:0 0 14px;color:var(--leise);font-size:15px}
+  .fenster input{width:100%;font-size:18px;padding:12px;border:1px solid var(--linie);border-radius:10px;
+    background:var(--bg);color:var(--text);margin-bottom:12px}
+  .fenster .knopf{width:100%;font-size:17px;padding:13px;border:0;border-radius:12px;background:var(--gruen);
+    color:#fff;font-weight:600;cursor:pointer}
+  .fenster code{font-size:13px;background:var(--bg);padding:2px 5px;border-radius:5px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="kopf">
+    <h1>🛒 Einkaufsliste</h1>
+    <div id="status" class="status" title="Verbindung">
+      <span class="punkt"></span><span id="statusText">verbinde…</span>
+    </div>
+  </div>
+  <form class="neu" id="formNeu" autocomplete="off">
+    <input id="eingabe" list="vorschlaege" placeholder="Was brauchen wir? z. B. 2 l Milch" enterkeyhint="done" aria-label="Neuer Artikel">
+    <datalist id="vorschlaege"></datalist>
+    <button type="submit" aria-label="Hinzufügen">+</button>
+  </form>
+</header>
+
+<main>
+  <div id="leer" class="leer" hidden><b>✨</b>Die Liste ist leer.<br>Oben eintippen und mit + speichern.</div>
+  <div class="abschnitt" id="kopfOffen" hidden><span>Noch besorgen (<span id="anzOffen">0</span>)</span></div>
+  <ul id="listeOffen"></ul>
+  <div class="abschnitt" id="kopfErledigt" hidden>
+    <span>Im Wagen (<span id="anzErledigt">0</span>)</span>
+    <button id="btnAufraeumen" type="button">Erledigte entfernen</button>
+  </div>
+  <ul id="listeErledigt"></ul>
+</main>
+
+<div id="toast" class="toast" hidden><span id="toastText"></span><button id="toastAktion" type="button">Rückgängig</button></div>
+
+<div id="fensterName" class="fenster" hidden>
+  <div>
+    <h2>Wer bist du?</h2>
+    <p>Damit ihr seht, wer was eingetragen hat. Einmalig pro Handy.</p>
+    <input id="nameEingabe" placeholder="Dein Vorname" maxlength="20">
+    <button class="knopf" id="nameSpeichern" type="button">Los geht's</button>
+  </div>
+</div>
+
+<div id="fensterSetup" class="fenster" hidden>
+  <div>
+    <h2>Noch nicht verbunden</h2>
+    <p id="setupText">In <code>firebase-config.js</code> fehlt noch der <code>apiKey</code> aus der Firebase-Konsole.</p>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, push, set, update, remove, onValue, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const $ = id => document.getElementById(id);
+const LISTE = "liste"; // Datenbank-Pfad: /liste/artikel und /liste/verlauf
+const cfg = window.FIREBASE_CONFIG || {};
+
+// ---------- Name ----------
+let meinName = "";
+try { meinName = localStorage.getItem("einkauf_name") || ""; } catch(e){}
+function nameAbfragen(){
+  $("fensterName").hidden = false;
+  $("nameEingabe").value = meinName;
+  setTimeout(()=> $("nameEingabe").focus(), 50);
+}
+$("nameSpeichern").onclick = () => {
+  const n = $("nameEingabe").value.trim();
+  if(!n) return;
+  meinName = n;
+  try { localStorage.setItem("einkauf_name", n); } catch(e){}
+  $("fensterName").hidden = true;
+};
+$("nameEingabe").addEventListener("keydown", e => { if(e.key==="Enter") $("nameSpeichern").click(); });
+if(!meinName) nameAbfragen();
+
+// ---------- Setup prüfen ----------
+if(!cfg.apiKey || cfg.apiKey.startsWith("HIER_")){
+  $("fensterSetup").hidden = false;
+  throw new Error("Firebase-Konfiguration fehlt");
+}
+
+// ---------- Firebase ----------
+const app = initializeApp(cfg);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const artikelRef = ref(db, `${LISTE}/artikel`);
+const verlaufRef = ref(db, `${LISTE}/verlauf`);
+
+// Status-Anzeige
+function setStatus(online){
+  $("status").className = "status " + (online ? "online" : "offline");
+  $("statusText").textContent = online ? "live" : "offline";
+}
+$("status").onclick = nameAbfragen;
+
+onAuthStateChanged(auth, user => {
+  if(user){ starten(); }
+});
+signInAnonymously(auth).catch(err => {
+  $("setupText").innerHTML = "Anmeldung bei Firebase fehlgeschlagen: <code>" + (err.code||err.message) +
+    "</code><br><br>In der Firebase-Konsole unter <b>Authentication → Sign-in method</b> den Anbieter <b>Anonym</b> aktivieren.";
+  $("fensterSetup").hidden = false;
+});
+
+let gestartet = false;
+let ersterLauf = true;
+let bekannteIds = new Set();
+let frischeIds = new Set();
+let artikel = {};
+
+function starten(){
+  if(gestartet) return; gestartet = true;
+  onValue(ref(db, ".info/connected"), s => setStatus(s.val() === true));
+
+  onValue(artikelRef, snap => {
+    artikel = snap.val() || {};
+    // Neue Einträge vom Partner hervorheben (nicht beim ersten Laden)
+    const ids = Object.keys(artikel);
+    if(!ersterLauf){
+      let neuVonAnderen = false;
+      for(const id of ids){
+        if(!bekannteIds.has(id) && artikel[id].von !== meinName){
+          frischeIds.add(id); neuVonAnderen = true;
+          setTimeout(()=>{ frischeIds.delete(id); zeichnen(); }, 5*60*1000);
+        }
+      }
+      if(neuVonAnderen && navigator.vibrate) navigator.vibrate([120,80,120]);
+    }
+    bekannteIds = new Set(ids);
+    ersterLauf = false;
+    zeichnen();
+  }, err => {
+    $("setupText").innerHTML = "Kein Zugriff auf die Datenbank: <code>" + (err.code||err.message) + "</code>";
+    $("fensterSetup").hidden = false;
+  });
+
+  onValue(verlaufRef, snap => {
+    const v = snap.val() || {};
+    const namen = Object.values(v).sort((a,b)=>(b.anzahl||0)-(a.anzahl||0)).slice(0,200);
+    $("vorschlaege").innerHTML = namen.map(x => `<option value="${esc(x.name)}">`).join("");
+  });
+}
+
+// ---------- Darstellung ----------
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function zeit(ts){
+  if(!ts) return "";
+  const d = new Date(ts), jetzt = new Date();
+  const hm = d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+  if(d.toDateString() === jetzt.toDateString()) return "heute " + hm;
+  const gestern = new Date(jetzt); gestern.setDate(jetzt.getDate()-1);
+  if(d.toDateString() === gestern.toDateString()) return "gestern " + hm;
+  return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"}) + " " + hm;
+}
+
+function zeichnen(){
+  const alle = Object.entries(artikel).map(([id,a]) => ({id, ...a}));
+  const offen = alle.filter(a => !a.erledigt).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  const erledigt = alle.filter(a => a.erledigt).sort((a,b)=>(b.erledigtTs||0)-(a.erledigtTs||0));
+
+  $("listeOffen").innerHTML = offen.map(zeile).join("");
+  $("listeErledigt").innerHTML = erledigt.map(zeile).join("");
+  $("anzOffen").textContent = offen.length;
+  $("anzErledigt").textContent = erledigt.length;
+  $("kopfOffen").hidden = offen.length === 0;
+  $("kopfErledigt").hidden = erledigt.length === 0;
+  $("leer").hidden = alle.length !== 0;
+  document.title = offen.length ? `(${offen.length}) Einkaufsliste` : "Einkaufsliste";
+}
+
+function zeile(a){
+  const frisch = frischeIds.has(a.id) && !a.erledigt;
+  let info = a.von ? `${esc(a.von)} · ${zeit(a.ts)}` : zeit(a.ts);
+  if(a.erledigt && a.erledigtVon) info = `✓ ${esc(a.erledigtVon)} · ${zeit(a.erledigtTs)}`;
+  return `<li data-id="${a.id}" class="${a.erledigt?"erledigt":""} ${frisch?"frisch":""}">
+    <span class="haken">${a.erledigt?"✓":""}</span>
+    <div class="inhalt">
+      <div class="name">${esc(a.name)}${frisch?'<span class="neu-marke">NEU</span>':""}</div>
+      <div class="info">${info}</div>
+    </div>
+    <button class="loeschen" data-loeschen="${a.id}" aria-label="Löschen">✕</button>
+  </li>`;
+}
+
+// ---------- Aktionen ----------
+$("formNeu").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = $("eingabe").value.trim();
+  if(!name) return;
+  // Doppelte offene Einträge vermeiden
+  const doppelt = Object.values(artikel).some(a => !a.erledigt && a.name.toLowerCase() === name.toLowerCase());
+  if(doppelt){ zeigeToast(`„${name}“ steht schon drauf`); $("eingabe").value=""; return; }
+  push(artikelRef, { name, von: meinName || "", ts: serverTimestamp(), erledigt: false });
+  // Verlauf für Vorschläge
+  const key = name.toLowerCase().replace(/[.#$\[\]\/]/g,"_").slice(0,80);
+  const vRef = ref(db, `${LISTE}/verlauf/${key}`);
+  onValue(vRef, s => { set(vRef, { name, anzahl: ((s.val()||{}).anzahl||0)+1 }); }, { onlyOnce:true });
+  $("eingabe").value = "";
+  $("eingabe").focus();
+});
+
+function klick(e){
+  const del = e.target.closest("[data-loeschen]");
+  if(del){
+    const id = del.dataset.loeschen, alt = artikel[id];
+    remove(ref(db, `${LISTE}/artikel/${id}`));
+    zeigeToast(`„${alt.name}“ gelöscht`, () => set(ref(db, `${LISTE}/artikel/${id}`), alt));
+    return;
+  }
+  const li = e.target.closest("li[data-id]");
+  if(!li) return;
+  const id = li.dataset.id, a = artikel[id];
+  const jetztErledigt = !a.erledigt;
+  update(ref(db, `${LISTE}/artikel/${id}`), jetztErledigt
+    ? { erledigt:true, erledigtVon: meinName||"", erledigtTs: serverTimestamp() }
+    : { erledigt:false, erledigtVon:null, erledigtTs:null });
+  if(navigator.vibrate) navigator.vibrate(15);
+}
+$("listeOffen").addEventListener("click", klick);
+$("listeErledigt").addEventListener("click", klick);
+
+$("btnAufraeumen").onclick = () => {
+  const weg = Object.entries(artikel).filter(([,a]) => a.erledigt);
+  if(!weg.length) return;
+  const upd = {}; const sicherung = {};
+  for(const [id,a] of weg){ upd[id] = null; sicherung[id] = a; }
+  update(artikelRef, upd);
+  zeigeToast(`${weg.length} erledigte entfernt`, () => update(artikelRef, sicherung));
+};
+
+// ---------- Toast ----------
+let toastTimer;
+function zeigeToast(text, rueckgaengig){
+  $("toastText").textContent = text;
+  $("toastAktion").hidden = !rueckgaengig;
+  $("toastAktion").onclick = () => { rueckgaengig && rueckgaengig(); $("toast").hidden = true; };
+  $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> $("toast").hidden = true, 5000);
+}
+
+// ---------- Offline-Fähigkeit / Installation ----------
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
