@@ -1,7 +1,7 @@
 // Service Worker: hält die App-Hülle für schnellen Start/Offline bereit.
 // Die Listendaten selbst kommen live aus Firebase (nicht aus diesem Cache).
-const CACHE = "einkauf-v2";
-const DATEIEN = ["./", "index.html", "firebase-config.js", "manifest.json",
+const CACHE = "einkauf-v3";
+const DATEIEN = ["./", "index.html", "firebase-config.js", "katalog.js", "manifest.json",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

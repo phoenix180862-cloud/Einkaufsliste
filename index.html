@@ -71,6 +71,18 @@
   details.kat summary{list-style:none;padding:14px;font-size:17px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between}
   details.kat summary::-webkit-details-marker{display:none}
   details.kat summary .zahl{font-weight:400;color:var(--leise);font-size:14px}
+  details.kat summary .titel{display:flex;align-items:center;gap:10px}
+  details.kat summary .titel i{font-style:normal;font-size:22px;line-height:1}
+  details.kat[open] summary{border-bottom:1px solid var(--linie);margin-bottom:4px}
+  .gruppe{padding:10px 14px 4px;font-size:12.5px;font-weight:700;color:var(--gruen);
+    text-transform:uppercase;letter-spacing:.5px}
+  @media (prefers-color-scheme: dark){ .gruppe{color:#7fd3a5} }
+  .treffer{background:var(--karte);border:1px solid var(--linie);border-radius:14px;margin-bottom:8px;padding-bottom:4px}
+  .treffer .pfad{padding:12px 14px 6px;font-size:13px;color:var(--leise)}
+  .treffer .pfad b{color:var(--text);font-weight:600}
+  .suchkopf{display:flex;justify-content:space-between;align-items:center;margin:4px 4px 12px;font-size:14px;color:var(--leise)}
+  .suchkopf button{font:inherit;font-size:13px;border:1px solid var(--linie);background:var(--karte);color:var(--text);
+    border-radius:20px;padding:5px 12px;cursor:pointer}
   .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 12px 14px}
   .chip{border:1.5px solid var(--linie);background:var(--bg);color:var(--text);border-radius:22px;
     padding:8px 13px;font:inherit;font-size:15px;cursor:pointer}
@@ -127,7 +139,7 @@
     <ul id="listeErledigt"></ul>
   </section>
   <section id="ansichtKatalog" hidden>
-    <p class="hinweis">Antippen setzt den Artikel auf die Liste – nochmal antippen nimmt ihn wieder runter.</p>
+    <p class="hinweis" id="katHinweis">Oben eintippen zum Suchen. Antippen setzt den Artikel auf die Liste – nochmal antippen nimmt ihn wieder runter.</p>
     <div id="katalog"></div>
   </section>
 </main>
@@ -148,6 +160,7 @@
 </div>
 
 <script src="firebase-config.js"></script>
+<script src="katalog.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -218,7 +231,7 @@ function starten(){
   for(const [typ, t] of Object.entries(TYPEN)){
     onValue(ref(db, t.pfad), snap => {
       kataloge[typ] = snap.val() || {};
-      vorschlaegeAufbauen(); zeichnen();
+      katalogAufbauen(); zeichnen();
     });
   }
 }
@@ -236,24 +249,49 @@ function zeit(ts){
   if(d.toDateString() === g.toDateString()) return "gestern " + hm;
   return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"}) + " " + hm;
 }
-function katalogArtikel(typ){
-  const out = [];
-  for(const [kat, liste] of Object.entries(kataloge[typ] || {}))
-    for(const n of Object.values(liste || {})) if(typeof n === "string") out.push({kat, name:n});
-  return out;
+// Vergleichsschlüssel: Groß/Klein egal, Mehrzahl-s egal ("Mango" = "Mangos")
+const schluessel = s => norm(s).replace(/\s+/g," ").replace(/s$/,"");
+
+// ---------- Katalog (fest eingebaut + alte Einträge aus der Datenbank) ----------
+// KAT[typ] = [{ name, icon, gruppen:[{ name, artikel:[...] }] }]
+let KAT = { lm:[], hh:[], kl:[] };
+let index = new Map();            // schluessel -> { name, typ, hi, haupt, icon, gruppe, pos }
+function katalogAufbauen(){
+  index = new Map(); KAT = { lm:[], hh:[], kl:[] };
+  let pos = 0;
+  const eintragen = (typ, hi, h, g, name) => {
+    const k = schluessel(name);
+    if(!k || index.has(k)) return false;
+    index.set(k, { name, typ, hi, haupt:h.name, icon:h.icon, gruppe:g.name, pos: pos++ });
+    return true;
+  };
+  for(const typ of Object.keys(TYPEN)){
+    const fest = (window.KATALOG && window.KATALOG[typ]) || [];
+    KAT[typ] = fest.map(h => ({ name:h.name, icon:h.icon, gruppen:h.gruppen.map(g => ({ name:g.name, artikel:[] })) }));
+    fest.forEach((h, hi) => h.gruppen.forEach((g, gi) => g.artikel.forEach(n => {
+      if(eintragen(typ, hi, h, g, n)) KAT[typ][hi].gruppen[gi].artikel.push(n);
+    })));
+  }
+  // Alte Katalog-Artikel aus der Datenbank, die oben noch fehlen -> "Weitere"
+  for(const typ of Object.keys(TYPEN)){
+    const weitere = { name:"Weitere", icon:"📦", gruppen:[] };
+    const hi = KAT[typ].length;
+    for(const [kat, liste] of Object.entries(kataloge[typ] || {})){
+      const g = { name:kat, artikel:[] };
+      for(const n of Object.values(liste || {}))
+        if(typeof n === "string" && eintragen(typ, hi, weitere, g, n.trim())) g.artikel.push(n.trim());
+      if(g.artikel.length) weitere.gruppen.push(g);
+    }
+    if(weitere.gruppen.length) KAT[typ].push(weitere);
+  }
+  $("vorschlaege").innerHTML = [...index.values()].map(a => a.name)
+    .sort((a,b)=>a.localeCompare(b,"de")).map(n => `<option value="${esc(n)}">`).join("");
 }
-function typRaten(name){
-  for(const typ of Object.keys(TYPEN))
-    if(katalogArtikel(typ).some(a => norm(a.name) === norm(name))) return typ;
-  return "lm";
-}
+const finden = name => index.get(schluessel(name));
+function typRaten(name){ const f = finden(name); return f ? f.typ : "lm"; }
 function offenerEintrag(name){
-  return Object.entries(artikel).find(([,a]) => !a.erledigt && norm(a.name) === norm(name));
-}
-function vorschlaegeAufbauen(){
-  const namen = new Set();
-  for(const typ of Object.keys(TYPEN)) for(const a of katalogArtikel(typ)) namen.add(a.name);
-  $("vorschlaege").innerHTML = [...namen].sort((a,b)=>a.localeCompare(b,"de")).map(n => `<option value="${esc(n)}">`).join("");
+  const k = schluessel(name);
+  return Object.entries(artikel).find(([,a]) => !a.erledigt && schluessel(a.name) === k);
 }
 
 // ---------- Aktionen ----------
@@ -278,9 +316,13 @@ function umschalten(id){
 
 $("formNeu").addEventListener("submit", e => {
   e.preventDefault();
-  hinzufuegen($("eingabe").value, aktiverTab === "liste" ? null : aktiverTab);
+  const wert = $("eingabe").value, f = finden(wert);
+  hinzufuegen(f ? f.name : wert, f ? f.typ : (aktiverTab === "liste" ? null : aktiverTab));
   $("eingabe").value = ""; $("eingabe").focus();
+  if(aktiverTab !== "liste") zeichnen();
 });
+// Im Katalog filtert die Eingabe live
+$("eingabe").addEventListener("input", () => { if(aktiverTab !== "liste") zeichnen(); });
 
 function listenKlick(e){
   const del = e.target.closest("[data-loeschen]");
@@ -292,10 +334,11 @@ $("offenBereich").addEventListener("click", listenKlick);
 $("listeErledigt").addEventListener("click", listenKlick);
 
 $("katalog").addEventListener("click", e => {
+  if(e.target.closest("[data-suche-weg]")){ $("eingabe").value = ""; zeichnen(); return; }
   const chip = e.target.closest(".chip"); if(!chip) return;
   const name = chip.dataset.name;
   const vorhanden = offenerEintrag(name);
-  if(vorhanden) loeschen(vorhanden[0]); else hinzufuegen(name, aktiverTab);
+  if(vorhanden) loeschen(vorhanden[0]); else hinzufuegen(name, (finden(name)||{}).typ || aktiverTab);
 });
 
 $("btnAufraeumen").onclick = () => {
@@ -311,7 +354,9 @@ $("tabs").addEventListener("click", e => {
   const b = e.target.closest("button[data-tab]"); if(!b) return;
   aktiverTab = b.dataset.tab;
   for(const x of $("tabs").children) x.classList.toggle("aktiv", x === b);
-  $("eingabe").placeholder = aktiverTab === "liste" ? "Was brauchen wir?" : `${TYPEN[aktiverTab].titel}: eigener Artikel…`;
+  $("eingabe").placeholder = aktiverTab === "liste" ? "Was brauchen wir?" : `${TYPEN[aktiverTab].titel} durchsuchen…`;
+  // Im Katalog übernimmt die eigene Suche, die Vorschlagsliste würde nur stören
+  if(aktiverTab === "liste") $("eingabe").setAttribute("list","vorschlaege"); else $("eingabe").removeAttribute("list");
   zeichnen(); window.scrollTo(0,0);
 });
 
@@ -338,12 +383,21 @@ function zeichnen(){
   $("ansichtKatalog").hidden = aktiverTab === "liste";
 
   if(aktiverTab === "liste"){
-    // Offene Artikel nach Bereich gruppiert
+    // Offene Artikel nach Kategorie gruppiert, in Supermarkt-Reihenfolge
+    const bloecke = new Map();      // key -> { titel, rang, eintraege }
+    const typRang = { lm:0, hh:1, kl:2 };
+    for(const [id,a] of offen){
+      const f = finden(a.name);
+      let key, titel, rang;
+      if(f){ key = f.typ + "|" + f.hi; titel = `${f.icon} ${f.haupt}`; rang = typRang[f.typ]*1000 + f.hi; }
+      else { key = "sonst"; titel = "✏️ Sonstiges"; rang = 9999; }
+      if(!bloecke.has(key)) bloecke.set(key, { titel, rang, eintraege:[] });
+      bloecke.get(key).eintraege.push([id, a, f ? f.pos : 1e9]);
+    }
     let html = "";
-    for(const typ of Object.keys(TYPEN)){
-      const gruppe = offen.filter(([,a]) => (TYPEN[a.typ] ? a.typ : "lm") === typ);
-      if(!gruppe.length) continue;
-      html += `<div class="abschnitt"><span>${TYPEN[typ].titel} (${gruppe.length})</span></div><ul>${gruppe.map(([id,a])=>zeile(id,a)).join("")}</ul>`;
+    for(const b of [...bloecke.values()].sort((x,y)=>x.rang-y.rang)){
+      b.eintraege.sort((x,y)=> x[2]-y[2] || (y[1].ts||0)-(x[1].ts||0));
+      html += `<div class="abschnitt"><span>${esc(b.titel)} (${b.eintraege.length})</span></div><ul>${b.eintraege.map(([id,a])=>zeile(id,a)).join("")}</ul>`;
     }
     $("offenBereich").innerHTML = html;
     $("listeErledigt").innerHTML = erledigt.map(([id,a])=>zeile(id,a)).join("");
@@ -351,17 +405,45 @@ function zeichnen(){
     $("kopfErledigt").hidden = erledigt.length === 0;
     $("leer").hidden = alle.length !== 0;
   } else {
-    const offeneNamen = new Set(offen.map(([,a]) => norm(a.name)));
-    const offenGeklappt = new Set([...document.querySelectorAll("details.kat[open]")].map(d => d.dataset.kat));
-    const kats = Object.entries(kataloge[aktiverTab] || {});
-    $("katalog").innerHTML = kats.length ? kats.map(([kat, liste]) => {
-      const namen = Object.values(liste || {}).filter(n => typeof n === "string");
-      const drauf = namen.filter(n => offeneNamen.has(norm(n))).length;
-      return `<details class="kat" data-kat="${esc(kat)}" ${offenGeklappt.has(kat)?"open":""}>
-        <summary><span>${esc(kat)}</span><span class="zahl">${drauf?`✓ ${drauf} · `:""}${namen.length}</span></summary>
-        <div class="chips">${namen.map(n => `<button class="chip ${offeneNamen.has(norm(n))?"drauf":""}" data-name="${esc(n)}">${esc(n)}</button>`).join("")}</div>
-      </details>`;
-    }).join("") : `<div class="leer">Katalog wird geladen…</div>`;
+    const offeneNamen = new Set(offen.map(([,a]) => schluessel(a.name)));
+    const chip = n => `<button class="chip ${offeneNamen.has(schluessel(n))?"drauf":""}" data-name="${esc(n)}">${esc(n)}</button>`;
+    const suche = norm($("eingabe").value);
+    $("katHinweis").hidden = !!suche;
+
+    if(suche){
+      // Trefferliste über alle Bereiche, aktueller Bereich zuerst
+      const woerter = suche.split(/\s+/);
+      const treffer = [...index.values()].filter(a => {
+        const text = norm(`${a.name} ${a.gruppe} ${a.haupt}`);
+        return woerter.every(w => text.includes(w));
+      }).sort((x,y)=> (x.typ!==aktiverTab) - (y.typ!==aktiverTab) || x.pos - y.pos);
+      const gruppen = new Map();
+      for(const a of treffer){
+        const k = `${a.typ}|${a.haupt}|${a.gruppe}`;
+        if(!gruppen.has(k)) gruppen.set(k, { a, namen:[] });
+        gruppen.get(k).namen.push(a.name);
+      }
+      $("katalog").innerHTML =
+        `<div class="suchkopf"><span>${treffer.length} Treffer</span><button type="button" data-suche-weg>Suche löschen</button></div>` +
+        (treffer.length ? [...gruppen.values()].map(({a, namen}) =>
+          `<div class="treffer"><div class="pfad">${a.typ!==aktiverTab?esc(TYPEN[a.typ].titel)+" › ":""}${a.icon} <b>${esc(a.haupt)}</b> › ${esc(a.gruppe)}</div>
+           <div class="chips">${namen.map(chip).join("")}</div></div>`).join("")
+        : `<div class="leer"><b>🔍</b>Nicht im Katalog.<br>Mit <b style="display:inline;font-size:inherit">+</b> oben als eigenen Artikel auf die Liste setzen.</div>`);
+    } else {
+      const offenGeklappt = new Set([...document.querySelectorAll("details.kat[open]")].map(d => d.dataset.kat));
+      const kats = KAT[aktiverTab] || [];
+      $("katalog").innerHTML = kats.map(h => {
+        const namen = h.gruppen.flatMap(g => g.artikel);
+        const drauf = namen.filter(n => offeneNamen.has(schluessel(n))).length;
+        const key = aktiverTab + "|" + h.name;
+        return `<details class="kat" data-kat="${esc(key)}" ${offenGeklappt.has(key)?"open":""}>
+          <summary><span class="titel"><i>${h.icon}</i>${esc(h.name)}</span><span class="zahl">${drauf?`✓ ${drauf} · `:""}${namen.length}</span></summary>
+          ${h.gruppen.filter(g => g.artikel.length).map(g =>
+            (h.gruppen.length > 1 ? `<div class="gruppe">${esc(g.name)}</div>` : "") +
+            `<div class="chips">${g.artikel.map(chip).join("")}</div>`).join("")}
+        </details>`;
+      }).join("");
+    }
   }
 }
 
@@ -375,6 +457,8 @@ function zeigeToast(text, rueckgaengig){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> $("toast").hidden = true, 5000);
 }
+
+katalogAufbauen(); zeichnen();
 
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
